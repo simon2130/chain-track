@@ -32,6 +32,7 @@ public class User {
     @JoinColumn(name = "organization_id", nullable = false)
     private Organization organization;
 
+    @Builder.Default
     @Column(nullable = false)
     private boolean active = true;
 

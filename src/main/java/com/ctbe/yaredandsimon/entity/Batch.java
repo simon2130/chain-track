@@ -37,6 +37,7 @@ public class Batch {
     @Column(name = "expiry_date")
     private LocalDate expiryDate;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private BatchStatus status = BatchStatus.CREATED;

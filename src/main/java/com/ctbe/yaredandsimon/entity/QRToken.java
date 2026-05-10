@@ -28,9 +28,11 @@ public class QRToken {
     @Column(name = "qr_image", nullable = false, columnDefinition = "TEXT")
     private String qrImageBase64;
 
+    @Builder.Default
     @Column(name = "scan_count", nullable = false)
     private Integer scanCount = 0;
 
+    @Builder.Default
     @Column(nullable = false)
     private boolean active = true;
 

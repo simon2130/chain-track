@@ -32,6 +32,7 @@ public class Organization {
     @Column(nullable = false, length = 500)
     private String address;
 
+    @Builder.Default
     @Column(nullable = false)
     private boolean active = true;
 
