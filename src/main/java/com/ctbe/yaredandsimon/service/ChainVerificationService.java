@@ -33,16 +33,27 @@ public class ChainVerificationService {
         qrToken.setScanCount(qrToken.getScanCount() + 1);
         qrTokenRepository.save(qrToken);
 
-        // 3. Get the batch and all its transactions in order
-        Batch batch = qrToken.getBatch();
+        // 3. Explicitly load the batch by ID
+        Batch batch = batchRepository.findById(qrToken.getBatch().getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Batch not found"));
+
+        // 4. Get all transactions in order
         List<MovementTransaction> transactions =
                 transactionRepository.findByBatchIdOrderByTimestampAsc(batch.getId());
 
         if (transactions.isEmpty()) {
-            return new VerificationResult(false, batch, transactions, "No transactions found");
+            // Empty transactions return
+            return new VerificationResult(
+                    true,
+                    batch.getId(),
+                    batch.getBatchNumber(),
+                    batch.getStatus().name(),
+                    0,
+                    "Chain is valid — no transactions yet"
+            );
         }
 
-        // 4. Re-compute and validate every hash in the chain
+        // 5. Re-compute and validate every hash in the chain
         String previousHash = null;
         for (MovementTransaction tx : transactions) {
             String expectedHash = hashChainBuilder.computeHash(
@@ -54,22 +65,39 @@ public class ChainVerificationService {
             );
 
             if (!expectedHash.equals(tx.getSignatureHash())) {
-                // Chain is broken — mark batch as COMPROMISED
                 batch.setStatus(Batch.BatchStatus.COMPROMISED);
                 batchRepository.save(batch);
-                return new VerificationResult(false, batch, transactions, "Chain integrity check failed — batch is COMPROMISED");
+                // Compromised return
+                return new VerificationResult(
+                        false,
+                        batch.getId(),
+                        batch.getBatchNumber(),
+                        batch.getStatus().name(),
+                        transactions.size(),
+                        "Chain integrity check failed — batch is COMPROMISED"
+                );
             }
 
             previousHash = tx.getSignatureHash();
         }
 
-        return new VerificationResult(true, batch, transactions, "Chain is valid");
+        // Valid return at the end
+        return new VerificationResult(
+                true,
+                batch.getId(),
+                batch.getBatchNumber(),
+                batch.getStatus().name(),
+                transactions.size(),
+                "Chain is valid"
+        );
     }
 
     public record VerificationResult(
             boolean valid,
-            Batch batch,
-            List<MovementTransaction> transactions,
+            Long batchId,
+            String batchNumber,
+            String batchStatus,
+            int transactionCount,
             String message
     ) {}
 }
