@@ -60,6 +60,11 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.INTERNAL_SERVER_ERROR,
                 "An unexpected error occurred", request.getRequestURI());
     }
+    @ExceptionHandler(org.springframework.security.authorization.AuthorizationDeniedException.class)
+    public ResponseEntity<ApiErrorResponse> handleAuthorizationDenied(
+            Exception ex, HttpServletRequest request) {
+        return build(HttpStatus.FORBIDDEN, "Access denied", request.getRequestURI());
+    }
 
     private ResponseEntity<ApiErrorResponse> build(HttpStatus status,
                                                    String message, String path) {

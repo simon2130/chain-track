@@ -2,6 +2,7 @@ package com.ctbe.yaredandsimon.security;
 
 import com.ctbe.yaredandsimon.repository.JwtBlacklistRepository;
 import com.ctbe.yaredandsimon.service.CustomUserDetailsService;
+import com.ctbe.yaredandsimon.security.JWTUtilities;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,7 +23,7 @@ import java.io.IOException;
 @Slf4j
 public class JwtAuthFilter extends OncePerRequestFilter {
 
-    private final JWTUtilities JWTUtilities;
+    private final JWTUtilities jwtUtils;
     private final CustomUserDetailsService userDetailsService;
     private final JwtBlacklistRepository blacklistRepository;
 
@@ -47,8 +48,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             return;
         }
 
-        if (JWTUtilities.validateToken(token)) {
-            String email = JWTUtilities.extractEmail(token);
+        if (jwtUtils.validateToken(token)) {
+            String email = jwtUtils.extractEmail(token);
             UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
             UsernamePasswordAuthenticationToken authentication =
